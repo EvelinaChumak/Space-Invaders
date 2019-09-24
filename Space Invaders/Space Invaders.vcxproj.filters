@@ -26,8 +26,11 @@
     <ClCompile Include="Game.cpp">
       <Filter>Файлы ресурсов</Filter>
     </ClCompile>
-    <ClCompile Include="Methods.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClCompile Include="Methods.cpp">
+      <Filter>Файлы ресурсов</Filter>
+    </ClCompile>
+    <ClCompile Include="Interface.cpp">
+      <Filter>Файлы ресурсов</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
