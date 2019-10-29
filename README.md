@@ -2,7 +2,7 @@
 
 **В данный момент реализована логическая составляющая на языке С++ с небольшим примером в консоле и arduino**
 
-#Arduino
+# Arduino
 
 Используется arduino Uno, экран Nokia 51110 Joystick Shield Arduino
 
