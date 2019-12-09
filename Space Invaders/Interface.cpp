@@ -23,6 +23,7 @@ void Field::clearEnemies(BlockOfEnemies& Enemies)
 	{
 
 		for (int i = 0; i < 33; ++i)
+			if ((Enemies.Enemies[i].x > 0) and (Enemies.Enemies[i].y > 0))
 		{
 			coord.X = Enemies.Enemies[i].x;
 			coord.Y = Enemies.Enemies[i].y + j;
@@ -65,7 +66,7 @@ void Field::clear() {
 	SetConsoleCursorPosition(console, coord);
 }
 
-void Field::drawship(MyShip &ship)
+void Field::drawShip(MyShip &ship)
 {
 	GetConsoleScreenBufferInfo(console, &screen);
 	screen.dwSize.X = 10;
@@ -86,23 +87,36 @@ void Field::drawship(MyShip &ship)
 	);
 }
 
-void Field::drawshield(Shield &shield)
+void Field::drawSheild(sheild &sheild)
 {
-	screen.dwSize.X = 12;
 	screen.dwSize.Y = 1;
 
-	for (int i = 0; i < 4; ++i)
-	{
-		coord.Y = 27 + i;
-		for (int j = 0; j < 3; ++j)
-		{
-			coord.X = shield.Shields[j].x;
+	for (int j = 0; j < 3; ++j)
+		for (int i = 0; i < 4; ++i)
+		{ 
+			coord.Y = 27 + i;
+			coord.X = sheild.sheilds[j].x;
+			screen.dwSize.X = sheild.sheilds[j].live;
 			FillConsoleOutputCharacterA(
-				console, '@', screen.dwSize.X * screen.dwSize.Y, coord, &written
-			);
+			console, '@', screen.dwSize.X * screen.dwSize.Y, coord, &written);
 		}
-	}
 }
+
+void Field::clearSheild(sheild & sheild)
+{
+	screen.dwSize.Y = 1;
+
+	for (int j = 0; j < 3; ++j)
+		for (int i = 0; i < 4; ++i)
+		{
+			coord.Y = 27 + i;
+			coord.X = sheild.sheilds[j].x;
+			screen.dwSize.X = sheild.sheilds[j].live;
+			FillConsoleOutputCharacterA(
+				console, ' ', screen.dwSize.X * screen.dwSize.Y, coord, &written);
+		}
+}
+
 
 void Field::drawsEnemies(BlockOfEnemies& Enemies)
 {
@@ -114,11 +128,129 @@ void Field::drawsEnemies(BlockOfEnemies& Enemies)
 
 		for (int i = 0; i < 33; ++i)
 		{
-			coord.X = Enemies.Enemies[i].x;
-			coord.Y = Enemies.Enemies[i].y + j;
-			FillConsoleOutputCharacterA(
-				console, '*', screen.dwSize.X * screen.dwSize.Y, coord, &written
-			);
+			if ((Enemies.Enemies[i].x > 0) and (Enemies.Enemies[i].y > 0))
+			{
+				coord.X = Enemies.Enemies[i].x;
+				coord.Y = Enemies.Enemies[i].y + j;
+				FillConsoleOutputCharacterA(
+					console, '*', screen.dwSize.X * screen.dwSize.Y, coord, &written);
+			}
 		}
 	}
 }
+
+void Field::drawShipAttack(MyShip::Shell &shell)
+{
+	GetConsoleScreenBufferInfo(console, &screen);
+	screen.dwSize.X = 1;
+	screen.dwSize.Y = 1;
+	coord.X = shell.x;
+	coord.Y = shell.y;
+	FillConsoleOutputCharacterA(
+		console, '^', screen.dwSize.X * screen.dwSize.Y, coord, &written
+	);
+}
+
+void Field::clearShipAttack(MyShip::Shell &shell)
+{
+	GetConsoleScreenBufferInfo(console, &screen);
+	screen.dwSize.X = 1;
+	screen.dwSize.Y = 1;
+	coord.X = shell.x;
+	coord.Y = shell.y;
+	FillConsoleOutputCharacterA(
+		console, ' ', screen.dwSize.X * screen.dwSize.Y, coord, &written
+	);
+}
+
+void Field::clearEnem(BlockOfEnemies &Enemies, int i)
+{
+	screen.dwSize.X = 4;
+	screen.dwSize.Y = 1;
+
+	for (int j = 0; j < 3; ++j)
+	{
+			coord.X = Enemies.Enemies[i].x;
+			coord.Y = Enemies.Enemies[i].y + j;
+			FillConsoleOutputCharacterA(
+				console, ' ', screen.dwSize.X * screen.dwSize.Y, coord, &written
+			);
+		}
+}
+
+void Field::drawEnemiesAttack(BlockOfEnemies::Shell& shell)
+{
+	GetConsoleScreenBufferInfo(console, &screen);
+	screen.dwSize.X = 1;
+	screen.dwSize.Y = 1;
+	coord.X = shell.x;
+	coord.Y = shell.y;
+	FillConsoleOutputCharacterA(
+		console, '"', screen.dwSize.X * screen.dwSize.Y, coord, &written
+	);
+}
+
+void Field::clearEnemiesAttack(BlockOfEnemies::Shell& shell)
+{
+	GetConsoleScreenBufferInfo(console, &screen);
+	screen.dwSize.X = 1;
+	screen.dwSize.Y = 1;
+	coord.X = shell.x;
+	coord.Y = shell.y;
+	FillConsoleOutputCharacterA(
+		console, ' ', screen.dwSize.X * screen.dwSize.Y, coord, &written
+	);
+}
+
+void Field::drawShipLives(MyShip &ship)
+{
+	COORD position = { 68,1 }; 
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hConsole, position);
+	cout << "Lives: " << ship.live;
+}
+
+void Field::clearShipLives()
+{
+	COORD position = { 68,1 };
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hConsole, position);
+	cout << "        ";
+}
+
+void Field::drawPoint(MyShip &ship)
+{
+	COORD position = { 1,1 };
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hConsole, position);
+	cout << "Point: " << ship.Point;
+}
+
+void Field::clearPoint()
+{
+	COORD position = { 1,1 };
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hConsole, position);
+	cout << "            ";
+}
+
+void Field::ClearAll()
+{
+	GetConsoleScreenBufferInfo(console, &screen);
+	screen.dwSize.X = 84;
+	screen.dwSize.Y = 50;
+	coord.X = 0;
+	coord.Y = 0;
+	FillConsoleOutputCharacterA(
+		console, ' ', screen.dwSize.X * screen.dwSize.Y, coord, &written
+	);
+}
+
+void Field::Result(MyShip &ship)
+{
+	COORD position = { 34,24 };
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hConsole, position);
+	cout << "Your result: " << ship.Point << endl;
+}
+

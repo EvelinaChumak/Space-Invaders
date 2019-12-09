@@ -1,28 +1,36 @@
 #pragma once
+#include <vector>
 
+using namespace std;
 
-class Shield;
+class sheild;
 class MyShið;
 class BlockOfEnemies;
+
 
 class MyShip
 {
 public:
-							//ship location, number of lives
+								//ship location, number of lives
 	int x;
 	int y;
 	int live;
-	
+	int Point;
 
-	struct Shell	
+	struct Shell			
 	{
-		int x;
-		int y;
+		int x ;
+		int y ;
+		void Move();
+		bool EndField();
 	};
+
+	vector<Shell> shells;
+
 	MyShip();
 	Shell Attack();			//shell attack and where did
 	void Move(int&);
-	//void Death(BlockOfEnemies::Position&);
+	bool GameEnd;
 
 };
 
@@ -34,22 +42,38 @@ public:
 		int x;
 		int y;
 	};
+	struct Shell
+	{
+		int x;
+		int y;
+		void Move();
+		bool EndField();
+	};
+
+	int NumberOfEnemies;
+	int TimeReset = 0;		//to correctly determine the position
+	int DeadEnemies;
+
+	vector<Shell> shells;
 
 	Position Enemies[33];     // 33 enemies, 11 per line
 
-	void EnemyLocation(int&, int&);     // building enemy location
+	void EnemyLocation(int&, int&);     //how much has move, for void Move
 
-	void Move(Shield&,int &Time);		
+	void EnemyBuilding();
 
-	Position  Attack(int&);         // Attack, Position - then to draw how it flies, int to determine the frequency of the shells
-	void Death(MyShip::Shell&);										// death of the enemy, clearing his location
-	bool Over(Shield&, int&);										// checking if the enemies are too close
-	void ProjectileMovement(Position&);
-	void DeathShip(MyShip&, Position&);
+	void Move(sheild&,int &Time, MyShip&);		
+
+	vector<Shell> Attack();					// Attack, Position - then to draw how it flies, int to determine the frequency of the shells
+	int Death(MyShip::Shell&);										// death of the enemy, clearing his location
+	bool Over(sheild&, int&);										// checking if the enemies are too close
+	bool DeadAllEnemies();						
+	bool DeadShip(MyShip&, int&);				//whether the shell hit the ship and the death of the ship
+
 };
 
 
-class Shield
+class sheild
 {
 public:
 	struct Feature								//location of protective blocks, their degree of destruction
@@ -58,15 +82,10 @@ public:
 		int y;
 		int live;
 	};
-	Shield();
-	Feature Shields[3];
-	void Destruction(BlockOfEnemies::Position&);                        // block destruction
+	sheild();
+	Feature sheilds[3];
+	bool Destruction(BlockOfEnemies::Shell&);                        // block destruction
+	bool Destruction(MyShip::Shell&);
 	
 };
 
-
-
-inline void GameEnd()
-{
-	
-}

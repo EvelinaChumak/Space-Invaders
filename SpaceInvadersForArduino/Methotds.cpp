@@ -1,110 +1,147 @@
- //#pragma once
-
 #include "SpaceInvaders.h"
-#include <Arduino.h>
-//#include <iostream>
 
-void BlockOfEnemies::EnemyLocation(int &MoveX, int &MoveY)        //building enemies. Also used for movement
+void BlockOfEnemies::EnemyBuilding()    //fist location
 {
-  const int FirstX = 2;
-  const int FirstY = 7;
-  int ShiftY = 0;
-  int ShiftX;
-  for (int i = 0; i < 33; ++i)
+  DeadEnemies = 0;
+  const int8_t FirstX = 2;
+  const int8_t FirstY = 7;
+  int8_t ShiftY = 0;
+  int8_t ShiftX;
+  for (int8_t i = 0; i < 33; ++i)
   {
-    ShiftX = 5 * (i%11);
+    ShiftX = 5 * (i % 11);
     if (i > 10) ShiftY = 4;
     if (i > 21) ShiftY = 8;
-    //if (MoveX < 0) ShiftX = -ShiftX;
-    Enemies[i].x = FirstX + ShiftX + MoveX;
-    Enemies[i].y = FirstY + ShiftY + MoveY;
+    Enemies[i].x = FirstX + ShiftX;
+    Enemies[i].y = FirstY + ShiftY;
+  }
+  NumberOfEnemies = 33;
+}
+
+void BlockOfEnemies::EnemyLocation(int8_t &MoveX, int8_t &MoveY)    //change of fosition depending on movement
+{
+  for (int8_t i = 0; i < 33; ++i)
+  {
+    if ((Enemies[i].x != 0) or (Enemies[i].y != 0))
+    {
+      Enemies[i].x += MoveX;
+      Enemies[i].y += MoveY;
+    }
   }
 }
 
-void BlockOfEnemies::Move(Shield& Shield, unsigned long &Time)       // movement depending on time. It moves every second.
-                                // This also checks to complete the game or update the field
+void BlockOfEnemies::Move(Sheild& sheild, int &Time, MyShip& ship)      // movement depending on time. It moves every second.
+// This also checks to complete the game or update the field
 {
-  int MoveX = Time % 26;
-  int MoveY = Time / 26;
+  int8_t MoveX = 1;
+  int8_t MoveY = 0;
+  int8_t Downward = Time / 26;
+  if (Downward - (Time - 1) / 26 == 1)    //it takes 26 sec to move along the line, go down further
+    MoveY = 1;
   bool EndGame = false;
-  if (MoveY % 2 == 1) MoveX = 25 - MoveX;
-  if ((MoveY > 8) && (Time % 26 == 0) && (EndGame == false))
+  if (Downward % 2 == 1) MoveX = -1;          //depending on the downward movement, determine the right or left moves
+  if ((Downward > 8) && (EndGame == false))   // check each line of enemies for collision with a protective block
   {
-    EndGame = Over(Shield,MoveY);
+    EndGame = Over(sheild, Downward);
 
-    if ((MoveY > 12) && (EndGame == false))
+    if ((Downward > 12) && (EndGame == false))
     {
-      EndGame = Over(Shield, MoveY);
-      if ((MoveY > 16) && (EndGame == false))
+      EndGame = Over(sheild, Downward);
+      if ((Downward > 16) && (EndGame == false))
       {
-        EndGame = Over(Shield, MoveY);
+        EndGame = Over(sheild, MoveY);
         if (EndGame == false)
         {
-          MoveX = 0;
-          MoveY = 0;
-          EnemyLocation(MoveX, MoveY);
+         EndGame = Over(sheild, Downward);
         }
       }
     }
   }
+  if (DeadAllEnemies())   //if we destroyed all blocks, we build them from the biginning
+  {
+    TimeReset += Time;   // add the past time to implent the movement correctly
+    MoveX = 0;
+    MoveY = 0;
+    EnemyBuilding();
+    EnemyLocation(MoveX, MoveY);
+  }
   if (EndGame == true)
-    GameEnd();
+  {
+    ship.GameEnd = true;
+  }
   EnemyLocation(MoveX, MoveY);
+
 }
 
-BlockOfEnemies::Position BlockOfEnemies::Attack(int& Frequency)
+vector<BlockOfEnemies::Shell> BlockOfEnemies::Attack()
 {
-  Position Shell;               //randomly determines who shoots, the fewer enemies, the narrower the range of random value
-  Shell.x = 1;
-  Shell.y = 1;
-  int R; //= random(10) % Frequency;
-  if (R = 0)
-  {
-    int X = random(10) % 11;
-    //int X=0;
-    if (Enemies[X + 22].y == 0)
-      if (Enemies[X + 11].y == 0)
-        if (Enemies[X].y == 0)
-          if (Frequency > 0)
-            Frequency -= 1;
-          else Frequency = 1;
-        else Shell.y = Enemies[X].y;
-      else Shell.y = Enemies[X + 11].y;
-    else Shell.y = Enemies[X + 22].y;
-    Shell.x = X;
-  }
-  return Shell;
-}
+  Shell shell;                //randomly determines who shoots, the fewer enemies, the narrower the range of random value
+  shell.x = 1;
+  shell.y = 1;
 
-void BlockOfEnemies::Death(MyShip::Shell &shell)     // if the shell hits the enemy, then the enemy is reset. Will not be displayed on the field later
-{
-  int x = 0;
-  if (Enemies[shell.y].y != 0)
-    for (int i = 0; i < 5; ++i)
-      if (Enemies[shell.x + i].x != 0)
+ if (NumberOfEnemies > 0)
+ {
+    int R = rand() % NumberOfEnemies;
+    if (R < 2)
+    {
+      int X = rand() % 11;
+
+      if (Enemies[X + 22].y != 0)
       {
-        x = shell.x + i;
-        break;
+        shell.y = Enemies[X + 22].y + 3;
+        shell.x = Enemies[X+22].x;
       }
-  if (x !=0 )
-  {
-    Enemies[shell.y].y = 0;
-    Enemies[shell.x].x = 0;
+      else
+        if (Enemies[X + 11].y != 0)
+        {
+          shell.y = Enemies[X + 11].y + 3;
+          shell.x = Enemies[X+11].x;
+        }
+        else
+          if (Enemies[X].y != 0)
+          {
+            shell.y = Enemies[X].y + 3;
+            shell.x = Enemies[X].x;
+          }
+    }
   }
+
+  if (shell.y > 1)            //check if the shot was
+    shells.push_back(shell);
+  return shells;
 }
 
-bool BlockOfEnemies::Over(Shield& Shield, int& y)   // check for collision with protection.  If it’s not there, we
-{                         // move until we are too close to our ship
-  bool r = true;
-  for (int i = 0; i < 3; ++i)
+int8_t BlockOfEnemies::Death(MyShip::Shell shell)     // if the shell hits the enemy, then the enemy is reset. Will not be displayed on the field later
+{
+  int8_t k = 0;
+  for (int8_t i = 33; i >= 0; --i)
   {
-    if (Shield.Shields[i].live != 0)
+    for (int8_t j = 0; j < 5; ++j)
+    {
+      if ((Enemies[i].y + 2 == shell.y) and (Enemies[i].x + j == shell.x))
+      {
+        DeadEnemies++;
+        NumberOfEnemies--;
+        k = i;
+        return k;
+      }
+      else k = -1;
+    }
+  }
+  return k;
+}
+
+bool BlockOfEnemies::Over(Sheild& sheild, int8_t& y)   // check for collision with protection and ship
+{ 
+  bool r = true;
+  for (int i = 0; i < 3; ++i)           //check the collision with the ship or with protective blockss
+  {
+    if (sheild.sheilds[i].live != 0)
       r = false;
   }
-
-  if (r == true)
+  if (r == true)              //we check each line of enemies, if there are enemies in the line, there will be a colision with ship
   {
-    if (y == 8)
+    if (y == 20)
     {
       for (int i = 21; i < 32; ++i)
       {
@@ -112,7 +149,7 @@ bool BlockOfEnemies::Over(Shield& Shield, int& y)   // check for collision with 
           return true;
       }
     }
-    if (y == 12)
+    if (y == 24)
     {
       for (int i = 11; i < 21; ++i)
       {
@@ -120,7 +157,7 @@ bool BlockOfEnemies::Over(Shield& Shield, int& y)   // check for collision with 
           return true;
       }
     }
-    if (y == 16)
+    if (y == 28)
     {
       for (int i = 0; i < 10; ++i)
       {
@@ -128,72 +165,141 @@ bool BlockOfEnemies::Over(Shield& Shield, int& y)   // check for collision with 
           return true;
       }
     }
-    return false;
   }
-  return true;
-}
-
-Shield::Shield()
-{
-  const int Y = 27;
-  for (int i = 0; i < 3; ++i)
-  {
-    Shields[i].x = 11 + 24 * i;
-    Shields[i].y = Y;
-    Shields[i].live = 6;
-  }
-}
-
-void BlockOfEnemies::ProjectileMovement(Position& Projectile)
-{
-  Projectile.y += 1;
-}
-
-void Shield::Destruction(BlockOfEnemies::Position& Projectile)
-{
-  for (int i = 0; i<3; ++i)
-    for (int j = 0; j < 12; ++j)
+  else {
+    if (y == 9)             //we check each line of enemies, if there are enemies in the line, there will be a colision with protection blocks
     {
-      bool q = true;
-      if (Projectile.x == Shields[i].x + j)
+      for (int i = 21; i < 32; ++i)
       {
-        q = false;
-        Shields[i].live -= 1;
-        Projectile.x = 0;
-        Projectile.y = 0;
-        break;
+        if (Enemies[i].y != 0)
+          return true;
       }
-      if (!q) break;
     }
+    if (y == 13)
+    {
+      for (int i = 11; i < 21; ++i)
+      {
+        if (Enemies[i].y != 0)
+          return true;
+      }
+    }
+    if (y == 17)
+    {
+      for (int i = 0; i < 10; ++i)
+      {
+        if (Enemies[i].y != 0)
+          return true;
+      }
+    }
+  }
+}
+
+Sheild::Sheild()
+{
+  const int8_t Y = 27;
+  for (int8_t i = 0; i < 3; ++i)
+  {
+    sheilds[i].x = 11 + 24 * i;
+    sheilds[i].y = Y;
+    sheilds[i].live = 12;
+  }
+}
+
+bool Sheild::Destruction(BlockOfEnemies::Shell& shell)
+{
+  for (int8_t i = 0; i < 3; ++i)
+    for (int8_t j = 0; j < sheilds[i].live; ++j)
+    {
+      if ((sheilds[i].x + j == shell.x) and (sheilds[i].y == shell.y))
+        if (sheilds[i].live != 0)
+        {
+          sheilds[i].live--;
+          return true;
+        }
+    }
+  return false;
+}
+
+bool Sheild::Destruction(MyShip::Shell&  shell)
+{
+  for (int8_t i = 0; i < 3; ++i)
+    for (int8_t j = 0; j < sheilds[i].live; ++j)
+    {
+      if ((sheilds[i].x + j == shell.x ) and (sheilds[i].y + 4 == shell.y))
+        if (sheilds[i].live != 0)
+        {
+          sheilds[i].live--;
+          return true;
+        }
+    }
+  return false;
 }
 
 MyShip::MyShip()
 {
   live = 3;
+  GameEnd = false;
   x = 9;
   y = 38;
+  Point = 0;
 }
 
-void MyShip::Move(int& X)
+void MyShip::Move(int8_t& X)
 {
-  if ((x < 72) && (x > 2) || ((x == 72) && (X < 0)) || ((x == 2) && (X > 0)))
-  x += X;
+  if ((x < 72) && (x > 2) || ((x == 72) && (X < 0)) || ((x == 2) && (X > 0)))   //check if the ship went out of the border
+    x += X;
 
+}
+
+bool BlockOfEnemies::DeadShip(MyShip &ship, int8_t &j)
+{
+  for (int8_t i = 0; i < 10; ++i)
+    if ((ship.x + i == shells[j].x ) and (ship.y == shells[j].y))
+    {
+      ship.live--;
+      if (ship.live < 0)
+      {
+        ship.GameEnd = true;
+      }
+      return true;
+    }
+  return false;
 }
 
 MyShip::Shell MyShip::Attack()
 {
   Shell shell;
-  shell.x = x;
-  shell.y = y;
+  shell.x = x + 4;
+  shell.y = y - 1;
   return shell;
 }
 
-void BlockOfEnemies::DeathShip(MyShip& ship, Position& shell)
+
+bool BlockOfEnemies::DeadAllEnemies()
 {
-  
-  if (ship.x == shell.x)
-    ship.live -= 1;
-  if (ship.live < 0)
-    GameEnd();
+  if (DeadEnemies == 33) return true;
+  return false;
+}
+
+void MyShip::Shell::Move()
+{
+  y--;
+  //Serial.print8_tln(y);
+}
+
+bool MyShip::Shell::EndField()
+{
+  if (y == 0) return true;
+  return false;
+}
+
+void BlockOfEnemies::Shell::Move()
+{
+  y++;
+}
+
+bool BlockOfEnemies::Shell::EndField()
+{
+  if (y == 48) return true;
+  return false;
 }

@@ -14,9 +14,22 @@ public:
 	void clear();
 	void clearShip(MyShip &ship);
 	void clearEnemies(BlockOfEnemies& Enemies);
-	void drawship(MyShip &ship);
-	void drawshield(Shield &shield);
+	void drawShip(MyShip &ship);
+	void drawSheild(sheild &sheild);
+	void clearSheild(sheild &sheild);
 	void drawsEnemies(BlockOfEnemies& Enemies);
+	void drawShipAttack(MyShip::Shell &shel);
+	void clearShipAttack(MyShip::Shell &shell);
+	void clearEnem(BlockOfEnemies& Enemies, int i);
+	void drawEnemiesAttack(BlockOfEnemies::Shell&);
+	void clearEnemiesAttack(BlockOfEnemies::Shell&);
+	void drawShipLives(MyShip&);
+	void clearShipLives();
+	void drawPoint(MyShip&);
+	void clearPoint();
+	void ClearAll();
+	void Result(MyShip&);
+
 
 private:
 	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
